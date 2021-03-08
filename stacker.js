@@ -1,44 +1,177 @@
 function setup() {
-  createCanvas(700, 300);
-  player = new Player(0, 2);
-  print(player.x)
+  createCanvas(700/2, 1500/2);
+  game = new Game();
 }
 
 function keyPressed() {
   if (keyCode == 32) {
-    player.y -= 1;
     print("space bar")
+    game.updateBoard();
+
+    //game.player.y -= 1;
+
   }
 }
 
 function draw() {
   background(220);
-  player.update();
-  player.draw();
+  game.draw();
+
 
 }
 
-class Square {
+
+
+
+
+class Game {
+  // TODO the tileWidth should not be set in 3 different places... at least don't
+  // hard code it in 3 different places
+
+  constructor() {
+    this.player = new Player(0, 14);
+    this.board = new Board();
+    this.isPaused = false;
+  }
+
+  updateBoard() {
+    if (this.player.y == this.board.height - 1) {
+          this.board.placeBlocks(this.player.x, this.player.y, this.player.size);
+          this.player.y -= 1;
+    } else {
+      // need to check if tiles are being dropped
+      // check under  but this will happen in board placeBlocks for now
+          let newSize = this.board.placeBlocks(this.player.x, this.player.y, this.player.size);
+          this.player.y -= 1;
+          this.player.setSize(newSize);
+    }
+
+    this.player.setRandomX();
+  }
+
+  dropPlayer() {
+  }
+  
+  draw() {
+    this.player.update();
+    this.board.draw();
+    this.player.draw();
+  }
+}
+
+
+
+
+
+
+
+class Tile {
   constructor(x, y) {
     this.x = x;
     this.y = y;
+    this.width = 700/2/7;
     // other stuff
   }
+  
+  draw() {
+    fill(255, 255, 0);
+    rect(this.x * this.width, this.y * this.width, this.width, this.width);
+    rect((this.x + 1) * this.width, this.y * this.width, this.width, this.width);
+    rect((this.x + 2) * this.width, this.y * this.width, this.width, this.width);
+  }
 }
+
+
+
+
+
+
+
+
+
 
 class Board {
   constructor() {
     // construct board stuff
     
-    // dont place players stuff on the board until after the space bar is pressed
+    this.width = 7;
+    this.height = 15
+    
+    this.tileWidth = 700/2/7;
+    
+    this.grid = [];
+    this.reset();
+
   }
+
+
+
+placeBlocks(x, y, size) {
+  var newSize = 0;
+  if (y == this.height - 1) {
+    for (let i = 0; i < size; i++) {
+      this.grid[x + i][y] = 1;
+
+    }
+    newSize = 3
+  } else {
+    for (let i = 0; i < size; i++) {
+      if (this.grid[x + i][y + 1] == 1) {
+        this.grid[x + i][y] = 1;
+        newSize += 1;
+      }
+      
+
+    }
+
+  }
+
+  return newSize;
+  
 }
+
+
+  
+  reset() {
+    for (let i = 0; i < this.width; i++) {
+      this.grid.push([]);
+      for (let j = 0; j < this.height; j++) {
+        this.grid[i].push(0);
+      }
+    }
+  }
+  
+  draw() {
+    for (let i = 0; i < this.width; i++) {
+      for (let j = 0; j < this.height; j++) {
+        if (this.grid[i][j] == 0) {
+          fill(255, 0, 255);
+          rect(i * this.tileWidth, j * this.tileWidth, this.tileWidth, this.tileWidth);
+        } else {
+          fill(255, 0, 0);
+          rect(i * this.tileWidth, j * this.tileWidth, this.tileWidth, this.tileWidth);
+        }
+      }
+    }
+  }
+  
+    
+}
+
+
+
+
+
+
+
+
+
 
 class Player {
   constructor(x, y) {
     this.x = x;
     this.y = y;
-    this.width = 100;
+    this.width = 700/2/7;
 
     this.t = millis();
     this.size = 0;
@@ -62,12 +195,12 @@ class Player {
 
   reset() {
     this.setSize(3);
-    this.setSpeed(10);
+    this.setSpeed(1);
     this.setRandomX();
   }
 
   update() {
-    if (millis() - this.t > 1000) {
+    if (millis() - this.t > 750 / this.speed) {
       if (this.x + this.size == 7) {
         this.direction = -1
       }
@@ -84,8 +217,9 @@ class Player {
 
   draw() {
     fill(255, 255, 0);
-    rect(this.x * this.width, this.y * this.width, this.width, this.width);
-    rect((this.x + 1) * this.width, this.y * this.width, this.width, this.width);
-    rect((this.x + 2) * this.width, this.y * this.width, this.width, this.width);
+    for (var i = 0; i < this.size; i++) {
+        rect((this.x + i) * this.width, this.y * this.width, this.width, this.width);
+
+    }
   }
 }
